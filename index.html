@@ -186,32 +186,75 @@
     }
 
     function importarCSV(input) {
-        const file = input.files[0];
-        if (!file) return;
+    const file = input.files[0];
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const lineas = e.target.result.split(/\r?\n/);
-            const nuevos = [];
-            const sep = lineas[0].includes(';') ? ';' : ',';
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const contenido = e.target.result;
+            // 1. Dividir por líneas y limpiar espacios vacíos
+            const lineas = contenido.split(/\r?\n/).filter(l => l.trim() !== "");
+            
+            if (lineas.length < 2) return alert("El archivo está vacío o no tiene datos.");
 
-            for (let i = 1; i < lineas.length; i++) {
-                const col = lineas[i].split(sep);
-                if (col.length >= 5) {
-                    nuevos.push({ fecha: col[0].trim(), tipo: col[1].trim(), t1: col[2].trim(), t2: col[3].trim(), total: col[4].trim() });
+            // 2. Detectar separador automáticamente (coma, punto y coma o tabulador)
+            const separadores = [',', ';', '\t'];
+            let sep = ',';
+            let maxCols = 0;
+            separadores.forEach(s => {
+                const numCols = lineas[0].split(s).length;
+                if (numCols > maxCols) {
+                    maxCols = numCols;
+                    sep = s;
                 }
-            }
+            });
+
+            const nuevos = [];
+
+            // 3. Procesar cada línea (saltando la cabecera si es necesario)
+            lineas.forEach((linea, index) => {
+                // Si la línea contiene "Fecha" o "Tipo", es la cabecera, la saltamos
+                if (linea.toLowerCase().includes("fecha") || linea.toLowerCase().includes("tipo")) return;
+
+                const col = linea.split(sep).map(c => c.replace(/["']/g, "").trim());
+                
+                if (col.length >= 5) {
+                    // Limpieza profunda del campo 'Total' (convierte 8,50 en 8.50)
+                    let totalLimpio = col[4].replace(',', '.').replace(/[^\d.]/g, '');
+                    
+                    nuevos.push({
+                        fecha: col[0],
+                        tipo: col[1].toUpperCase(),
+                        t1: col[2],
+                        t2: col[3],
+                        total: totalLimpio || "0.00"
+                    });
+                }
+            });
+
             if (nuevos.length > 0) {
-                registros = [...registros, ...nuevos];
-                guardarYRefrescar();
-                alert("Importados " + nuevos.length + " registros.");
+                if (confirm(`Se han encontrado ${nuevos.length} registros válidos. ¿Deseas añadirlos?`)) {
+                    // Combinar y guardar
+                    registros = [...registros, ...nuevos];
+                    guardarYRefrescar();
+                    alert("Importación exitosa.");
+                }
             } else {
-                alert("No se reconoció el contenido del archivo.");
+                // Si falla, mostramos qué ha leído para diagnosticar
+                console.log("Contenido detectado:", lineas[1]);
+                alert("No se han reconocido registros. Asegúrate de que las columnas están en orden: Fecha, Tipo, Turno1, Turno2, Total.");
             }
-            input.value = "";
-        };
-        reader.readAsText(file);
-    }
+        } catch (err) {
+            alert("Error al procesar el archivo.");
+            console.error(err);
+        }
+        input.value = ""; 
+    };
+    // Leemos con ISO-8859-1 para mayor compatibilidad con archivos guardados desde Excel/Windows en español
+    reader.readAsText(file, "ISO-8859-1"); 
+}
+
 
     function limpiarTodo() { if(confirm("¿Borrar todo?")) { registros = []; guardarYRefrescar(); } }
 </script>
