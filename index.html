@@ -274,8 +274,15 @@ function guardar(){
     renderizar();
 }
 function formatearFecha(fechaISO) {
-    const [y, m, d] = fechaISO.split('-');
-    return `${d}/${m}/${y.slice(2)}`;
+    const dias = ['DO','LU','MA','MI','JU','VI','SÁ'];
+    const f = new Date(fechaISO + 'T00:00:00');
+    const dia = dias[f.getDay()];
+
+    const d = String(f.getDate()).padStart(2,'0');
+    const m = String(f.getMonth()+1).padStart(2,'0');
+    const y = String(f.getFullYear()).slice(2);
+
+    return `${dia} ${d}/${m}/${y}`;
 }
 function renderizar(){
     cuerpoTabla.innerHTML='';
