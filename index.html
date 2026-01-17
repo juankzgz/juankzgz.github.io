@@ -209,31 +209,61 @@ function minutosAHora(min){
     return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0');
 }
 
-function agregarFila(){
-    const fecha=fechaInput.value=fecha.value;
-    let totalMin=calcularMinutos(ent1.value,sal1.value);
-    let t2='-';
+function agregarFila() {
+    const fechaEl = document.getElementById('fecha');
+    const ent1El = document.getElementById('ent1');
+    const sal1El = document.getElementById('sal1');
+    const ent2El = document.getElementById('ent2');
+    const sal2El = document.getElementById('sal2');
+    const tipoEl = document.getElementById('tipoJornada');
 
-    if(tipoJornada.value==='partida'){
-        totalMin+=calcularMinutos(ent2.value,sal2.value);
-        t2=`${ent2.value} - ${sal2.value}`;
+    if (!fechaEl.value || !ent1El.value || !sal1El.value) {
+        alert("Faltan datos del primer turno");
+        return;
+    }
+
+    let totalMin = calcularMinutos(ent1El.value, sal1El.value);
+    let t2 = '-';
+
+    if (tipoEl.value === 'partida') {
+        if (!ent2El.value || !sal2El.value) {
+            alert("Faltan datos del segundo turno");
+            return;
+        }
+        totalMin += calcularMinutos(ent2El.value, sal2El.value);
+        t2 = `${ent2El.value} - ${sal2El.value}`;
     }
 
     registros.push({
-        id:Date.now()+Math.random(),
-        fecha,
-        tipo:tipoJornada.value.toUpperCase(),
-        t1:`${ent1.value} - ${sal1.value}`,
-        t2,
-        minutos:totalMin
+        id: Date.now(),
+        fecha: fechaEl.value,
+        tipo: tipoEl.value.toUpperCase(),
+        t1: `${ent1El.value} - ${sal1El.value}`,
+        t2: t2,
+        minutos: totalMin
     });
 
-    limpiarInputs();
+    ent1El.value = sal1El.value = ent2El.value = sal2El.value = '';
     guardar();
 }
 
-function agregarDNT(){
-    registros.push({id:Date.now(),fecha:fecha.value,tipo:'DNT',t1:'-',t2:'-',minutos:0});
+function agregarDNT() {
+    const fechaEl = document.getElementById('fecha');
+
+    if (!fechaEl.value) {
+        alert("Selecciona una fecha");
+        return;
+    }
+
+    registros.push({
+        id: Date.now(),
+        fecha: fechaEl.value,
+        tipo: 'DNT',
+        t1: '-',
+        t2: '-',
+        minutos: 0
+    });
+
     guardar();
 }
 
