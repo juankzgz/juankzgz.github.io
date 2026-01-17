@@ -1,15 +1,16 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Horario - Persistente</title>
+    <title>Control Horario Profesional</title>
     <style>
         :root {
             --primary: #2563eb;
             --secondary: #64748b;
             --success: #22c55e;
             --danger: #ef4444;
+            --warning: #f59e0b;
             --bg: #f8fafc;
         }
 
@@ -23,22 +24,39 @@
         label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
         input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
 
-        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+        .main-actions { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
         
+        button { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
         .btn-add { background-color: var(--primary); color: white; }
-        .btn-csv { background-color: var(--success); color: white; }
-        .btn-pdf { background-color: var(--secondary); color: white; }
-        .btn-clear { background-color: #94a3b8; color: white; margin-left: auto; }
+        .btn-dnt { background-color: var(--warning); color: white; }
+
+        /* Estilos del Dropdown */
+        .dropdown { position: relative; display: inline-block; margin-left: auto; }
+        .btn-menu { background-color: var(--secondary); color: white; }
+        .dropdown-content { 
+            display: none; position: absolute; right: 0; background-color: white; 
+            min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+            z-index: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;
+        }
+        .dropdown-content button, .dropdown-content label { 
+            width: 100%; padding: 12px 16px; text-align: left; background: none; 
+            color: #334155; border-radius: 0; border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem; cursor: pointer; display: block;
+        }
+        .dropdown-content button:hover, .dropdown-content label:hover { background-color: #f8fafc; color: var(--primary); }
+        .dropdown:hover .dropdown-content { display: block; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; font-size: 0.9rem; }
         th { background-color: #f1f5f9; }
 
+        .row-dnt { background-color: #fff7ed; color: #9a3412; font-style: italic; }
         .jornada-partida { display: none; }
 
         @media print {
-            .form-group, .btn-group, .delete-btn { display: none !important; }
+            .form-group, .main-actions, .delete-btn, .dropdown { display: none !important; }
             .container { box-shadow: none; border: none; width: 100%; }
         }
     </style>
@@ -78,11 +96,21 @@
         </div>
     </div>
 
-    <div class="btn-group">
+    <div class="main-actions">
         <button class="btn-add" onclick="agregarFila()">Añadir Registro</button>
-        <button class="btn-csv" onclick="exportarCSV()">Exportar CSV</button>
-        <button class="btn-pdf" onclick="window.print()">Guardar PDF</button>
-        <button class="btn-clear" onclick="limpiarTodo()">Borrar Todo</button>
+        <button class="btn-dnt" onclick="agregarDNT()">Día No Trabajado (DNT)</button>
+
+        <div class="dropdown">
+            <button class="btn-menu">Acciones ▾</button>
+            <div class="dropdown-content">
+                <button onclick="exportarCSV()">📥 Descargar CSV</button>
+                <label for="importCsv" style="margin:0;">📤 Subir CSV
+                    <input type="file" id="importCsv" accept=".csv" style="display:none" onchange="importarCSV(this)">
+                </label>
+                <button onclick="window.print()">📄 Guardar PDF</button>
+                <button onclick="limpiarTodo()" style="color:var(--danger)">⚠️ Borrar Datos</button>
+            </div>
+        </div>
     </div>
 
     <table id="tablaRegistros">
@@ -101,9 +129,9 @@
 </div>
 
 <script>
-    let registros = JSON.parse(localStorage.getItem('controlHorario')) || [];
+    let registros = JSON.parse(localStorage.getItem('controlHorarioV2')) || [];
 
-    // Inicializar
+    // Inicialización
     document.getElementById('fecha').valueAsDate = new Date();
     renderizarTabla();
 
@@ -129,81 +157,115 @@
         const ent2 = document.getElementById('ent2').value;
         const sal2 = document.getElementById('sal2').value;
 
-        if (!fecha || !ent1 || !sal1) return alert("Completa los datos mínimos");
+        if (!fecha || !ent1 || !sal1) return alert("Completa los datos de entrada/salida");
 
         let total = calcularHoras(ent1, sal1);
-        let turno2 = "-";
+        let t2 = "-";
 
         if (tipo === 'partida') {
             total += calcularHoras(ent2, sal2);
-            turno2 = `${ent2} - ${sal2}`;
+            t2 = `${ent2} - ${sal2}`;
         }
 
-        const nuevoRegistro = {
-            fecha,
-            tipo: tipo.charAt(0).toUpperCase() + tipo.slice(1),
-            turno1: `${ent1} - ${sal1}`,
-            turno2,
-            total: total.toFixed(2)
-        };
+        const reg = { fecha, tipo: tipo.toUpperCase(), t1: `${ent1} - ${sal1}`, t2, total: total.toFixed(2) };
+        registros.push(reg);
+        guardarYRefrescar();
+    }
 
-        registros.push(nuevoRegistro);
+    function agregarDNT() {
+        const fecha = document.getElementById('fecha').value;
+        if (!fecha) return alert("Selecciona una fecha");
+        
+        const reg = { fecha, tipo: 'DNT', t1: '-', t2: '-', total: '0.00' };
+        registros.push(reg);
         guardarYRefrescar();
     }
 
     function eliminarFila(index) {
-        if(confirm("¿Seguro que quieres borrar este registro?")) {
-            registros.splice(index, 1);
-            guardarYRefrescar();
-        }
-    }
-
-    function limpiarTodo() {
-        if(confirm("¿Borrar TODOS los datos permanentemente?")) {
-            registros = [];
-            guardarYRefrescar();
-        }
+        registros.splice(index, 1);
+        guardarYRefrescar();
     }
 
     function guardarYRefrescar() {
-        localStorage.setItem('controlHorario', JSON.stringify(registros));
+        localStorage.setItem('controlHorarioV2', JSON.stringify(registros));
         renderizarTabla();
     }
 
     function renderizarTabla() {
         const cuerpo = document.getElementById('cuerpoTabla');
         cuerpo.innerHTML = "";
-
-        registros.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)); // Ordenar por fecha reciente
+        registros.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
         registros.forEach((reg, index) => {
             const fila = cuerpo.insertRow();
+            if(reg.tipo === 'DNT') fila.className = 'row-dnt';
+            
             fila.innerHTML = `
                 <td>${reg.fecha}</td>
-                <td>${reg.tipo}</td>
-                <td>${reg.turno1}</td>
-                <td>${reg.turno2}</td>
-                <td><strong>${reg.total} h</strong></td>
+                <td><strong>${reg.tipo}</strong></td>
+                <td>${reg.t1}</td>
+                <td>${reg.t2}</td>
+                <td>${reg.total} h</td>
                 <td class="delete-btn">
-                    <button onclick="eliminarFila(${index})" style="background:var(--danger); color:white; padding:4px 8px; border-radius:4px;">&times;</button>
+                    <button onclick="eliminarFila(${index})" style="background:var(--danger); color:white; padding:4px 8px;">&times;</button>
                 </td>
             `;
         });
     }
 
+    // --- FUNCIONES DE ARCHIVOS ---
+
     function exportarCSV() {
         if (registros.length === 0) return alert("No hay datos");
         let csv = 'Fecha,Tipo,Turno 1,Turno 2,Total Horas\n';
-        registros.forEach(r => {
-            csv += `${r.fecha},${r.tipo},${r.turno1},${r.turno2},${r.total}\n`;
-        });
+        registros.forEach(r => csv += `${r.fecha},${r.tipo},${r.t1},${r.t2},${r.total}\n`);
         
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = url;
-        link.download = `control_horario_${new Date().getMonth()+1}.csv`;
+        link.href = URL.createObjectURL(blob);
+        link.download = `registro_horario.csv`;
         link.click();
+    }
+
+    function importarCSV(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const contenido = e.target.result;
+            const lineas = contenido.split('\n');
+            const nuevosRegistros = [];
+
+            // Empezamos en 1 para saltar la cabecera
+            for (let i = 1; i < lineas.length; i++) {
+                if (lineas[i].trim() === "") continue;
+                const datos = lineas[i].split(',');
+                if (datos.length >= 5) {
+                    nuevosRegistros.push({
+                        fecha: datos[0],
+                        tipo: datos[1],
+                        t1: datos[2],
+                        t2: datos[3],
+                        total: datos[4]
+                    });
+                }
+            }
+
+            if (confirm(`Se han encontrado ${nuevosRegistros.length} registros. ¿Deseas añadirlos a tu lista actual?`)) {
+                registros = [...registros, ...nuevosRegistros];
+                guardarYRefrescar();
+            }
+            input.value = ""; // Reset del input
+        };
+        reader.readAsText(file);
+    }
+
+    function limpiarTodo() {
+        if(confirm("¿Estás seguro? Se borrarán todos los datos del navegador.")) {
+            registros = [];
+            guardarYRefrescar();
+        }
     }
 </script>
 
