@@ -96,14 +96,13 @@
         </div>
     </div>
 
-    <div class="main-actions">
-        <button class="btn-add" onclick="agregarFila()">Añadir Registro</button>
+    <div class="main-actions">  
         <button class="btn-dnt" onclick="agregarDNT()">Día No Trabajado (DNT)</button>
-
+        <button class="btn-add" onclick="agregarFila()">Añadir Registro</button>
         <div class="dropdown">
             <button class="btn-menu">Acciones ▾</button>
             <div class="dropdown-content">
-                <button onclick="exportarCSV()">📥 Descargar CSV</button>
+                <button onclick="exportarCSV()">📥 DESCARGAR CSV</button>
                 <label for="importCsv" style="margin:0;">📤 Subir CSV
                     <input type="file" id="importCsv" accept=".csv" style="display:none" onchange="importarCSV(this)">
                 </label>
