@@ -273,7 +273,10 @@ function guardar(){
     localStorage.setItem('controlHorarioV4',JSON.stringify(registros));
     renderizar();
 }
-
+function formatearFecha(fechaISO) {
+    const [y, m, d] = fechaISO.split('-');
+    return `${d}/${m}/${y.slice(2)}`;
+}
 function renderizar(){
     cuerpoTabla.innerHTML='';
     let totalMes=0;
@@ -284,7 +287,7 @@ function renderizar(){
         const tr=cuerpoTabla.insertRow();
         if(r.tipo==='DNT') tr.className='row-dnt';
         tr.innerHTML=`
-        <td>${r.fecha}</td>
+        <td>${formatearFecha(r.fecha)}</td>
         <td>${r.tipo}</td>
         <td>${r.t1}</td>
         <td>${r.t2}</td>
