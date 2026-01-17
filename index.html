@@ -128,7 +128,8 @@
 </div>
 
 <script>
-    let registros = JSON.parse(localStorage.getItem('controlHorarioV2')) || [];
+    
+        let registros = JSON.parse(localStorage.getItem('controlHorarioV2')) || [];
 
     // Inicialización
     document.getElementById('fecha').valueAsDate = new Date();
@@ -174,15 +175,16 @@
     function agregarDNT() {
         const fecha = document.getElementById('fecha').value;
         if (!fecha) return alert("Selecciona una fecha");
-        
         const reg = { fecha, tipo: 'DNT', t1: '-', t2: '-', total: '0.00' };
         registros.push(reg);
         guardarYRefrescar();
     }
 
     function eliminarFila(index) {
-        registros.splice(index, 1);
-        guardarYRefrescar();
+        if(confirm("¿Eliminar este registro?")) {
+            registros.splice(index, 1);
+            guardarYRefrescar();
+        }
     }
 
     function guardarYRefrescar() {
@@ -193,6 +195,7 @@
     function renderizarTabla() {
         const cuerpo = document.getElementById('cuerpoTabla');
         cuerpo.innerHTML = "";
+        // Ordenar: lo más nuevo arriba
         registros.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
 
         registros.forEach((reg, index) => {
@@ -212,17 +215,24 @@
         });
     }
 
-    // --- FUNCIONES DE ARCHIVOS ---
+    // --- CORRECCIÓN DE IMPORTACIÓN/EXPORTACIÓN ---
 
     function exportarCSV() {
-        if (registros.length === 0) return alert("No hay datos");
-        let csv = 'Fecha,Tipo,Turno 1,Turno 2,Total Horas\n';
-        registros.forEach(r => csv += `${r.fecha},${r.tipo},${r.t1},${r.t2},${r.total}\n`);
+        if (registros.length === 0) return alert("No hay datos para exportar");
         
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        // Cabecera sin espacios extra
+        let csv = 'Fecha,Tipo,Turno1,Turno2,Total\n';
+        
+        registros.forEach(r => {
+            // Limpiamos la unidad 'h' si existiera por error en el dato
+            let totalLimpio = String(r.total).replace(' h', '');
+            csv += `${r.fecha},${r.tipo},${r.t1},${r.t2},${totalLimpio}\n`;
+        });
+        
+        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `registro_horario.csv`;
+        link.download = `control_horario_${new Date().toISOString().slice(0,10)}.csv`;
         link.click();
     }
 
@@ -233,29 +243,38 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             const contenido = e.target.result;
-            const lineas = contenido.split('\n');
+            // Dividir por saltos de línea (Windows \r\n o Linux \n)
+            const lineas = contenido.split(/\r?\n/);
             const nuevosRegistros = [];
 
-            // Empezamos en 1 para saltar la cabecera
+            // Empezamos en 1 para saltar la cabecera (Fecha,Tipo,Turno1...)
             for (let i = 1; i < lineas.length; i++) {
-                if (lineas[i].trim() === "") continue;
-                const datos = lineas[i].split(',');
+                const linea = lineas[i].trim();
+                if (linea === "") continue;
+
+                const datos = linea.split(',');
+                
                 if (datos.length >= 5) {
                     nuevosRegistros.push({
-                        fecha: datos[0],
-                        tipo: datos[1],
-                        t1: datos[2],
-                        t2: datos[3],
-                        total: datos[4]
+                        fecha: datos[0].trim(),
+                        tipo: datos[1].trim(),
+                        t1: datos[2].trim(),
+                        t2: datos[3].trim(),
+                        total: datos[4].trim().replace(' h', '') // Aseguramos formato numérico
                     });
                 }
             }
 
-            if (confirm(`Se han encontrado ${nuevosRegistros.length} registros. ¿Deseas añadirlos a tu lista actual?`)) {
-                registros = [...registros, ...nuevosRegistros];
-                guardarYRefrescar();
+            if (nuevosRegistros.length > 0) {
+                if (confirm(`Se han detectado ${nuevosRegistros.length} registros. ¿Añadirlos a la lista actual?`)) {
+                    registros = [...registros, ...nuevosRegistros];
+                    guardarYRefrescar();
+                    alert("Importación exitosa");
+                }
+            } else {
+                alert("No se encontraron registros válidos en el CSV.");
             }
-            input.value = ""; // Reset del input
+            input.value = ""; 
         };
         reader.readAsText(file);
     }
@@ -266,6 +285,7 @@
             guardarYRefrescar();
         }
     }
+
 </script>
 
 </body>
