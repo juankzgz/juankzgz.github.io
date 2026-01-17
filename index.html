@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Horario - Persistente</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); padding: 20px; color: #1e293b; }
+        .container { max-width: 950px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        h1 { text-align: center; color: var(--primary); margin-bottom: 30px; }
+        
+        .form-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; padding: 15px; background: #f1f5f9; border-radius: 8px; }
+        
+        label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
+
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+        
+        .btn-add { background-color: var(--primary); color: white; }
+        .btn-csv { background-color: var(--success); color: white; }
+        .btn-pdf { background-color: var(--secondary); color: white; }
+        .btn-clear { background-color: #94a3b8; color: white; margin-left: auto; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; font-size: 0.9rem; }
+        th { background-color: #f1f5f9; }
+
+        .jornada-partida { display: none; }
+
+        @media print {
+            .form-group, .btn-group, .delete-btn { display: none !important; }
+            .container { box-shadow: none; border: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Control de Jornada Laboral</h1>
+
+    <div class="form-group">
+        <div>
+            <label>Fecha</label>
+            <input type="date" id="fecha">
+        </div>
+        <div>
+            <label>Tipo de Jornada</label>
+            <select id="tipoJornada" onchange="toggleJornada()">
+                <option value="continua">Continua</option>
+                <option value="partida">Partida</option>
+            </select>
+        </div>
+        <div>
+            <label>Entrada 1</label>
+            <input type="time" id="ent1">
+        </div>
+        <div>
+            <label>Salida 1</label>
+            <input type="time" id="sal1">
+        </div>
+        <div class="jornada-partida">
+            <label>Entrada 2</label>
+            <input type="time" id="ent2">
+        </div>
+        <div class="jornada-partida">
+            <label>Salida 2</label>
+            <input type="time" id="sal2">
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-add" onclick="agregarFila()">Añadir Registro</button>
+        <button class="btn-csv" onclick="exportarCSV()">Exportar CSV</button>
+        <button class="btn-pdf" onclick="window.print()">Guardar PDF</button>
+        <button class="btn-clear" onclick="limpiarTodo()">Borrar Todo</button>
+    </div>
+
+    <table id="tablaRegistros">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Turno 1</th>
+                <th>Turno 2</th>
+                <th>Total</th>
+                <th class="delete-btn">Acción</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla"></tbody>
+    </table>
+</div>
+
+<script>
+    let registros = JSON.parse(localStorage.getItem('controlHorario')) || [];
+
+    // Inicializar
+    document.getElementById('fecha').valueAsDate = new Date();
+    renderizarTabla();
+
+    function toggleJornada() {
+        const tipo = document.getElementById('tipoJornada').value;
+        document.querySelectorAll('.jornada-partida').forEach(el => 
+            el.style.display = tipo === 'partida' ? 'block' : 'none'
+        );
+    }
+
+    function calcularHoras(inicio, fin) {
+        if (!inicio || !fin) return 0;
+        const [h1, m1] = inicio.split(':').map(Number);
+        const [h2, m2] = fin.split(':').map(Number);
+        return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+    }
+
+    function agregarFila() {
+        const fecha = document.getElementById('fecha').value;
+        const tipo = document.getElementById('tipoJornada').value;
+        const ent1 = document.getElementById('ent1').value;
+        const sal1 = document.getElementById('sal1').value;
+        const ent2 = document.getElementById('ent2').value;
+        const sal2 = document.getElementById('sal2').value;
+
+        if (!fecha || !ent1 || !sal1) return alert("Completa los datos mínimos");
+
+        let total = calcularHoras(ent1, sal1);
+        let turno2 = "-";
+
+        if (tipo === 'partida') {
+            total += calcularHoras(ent2, sal2);
+            turno2 = `${ent2} - ${sal2}`;
+        }
+
+        const nuevoRegistro = {
+            fecha,
+            tipo: tipo.charAt(0).toUpperCase() + tipo.slice(1),
+            turno1: `${ent1} - ${sal1}`,
+            turno2,
+            total: total.toFixed(2)
+        };
+
+        registros.push(nuevoRegistro);
+        guardarYRefrescar();
+    }
+
+    function eliminarFila(index) {
+        if(confirm("¿Seguro que quieres borrar este registro?")) {
+            registros.splice(index, 1);
+            guardarYRefrescar();
+        }
+    }
+
+    function limpiarTodo() {
+        if(confirm("¿Borrar TODOS los datos permanentemente?")) {
+            registros = [];
+            guardarYRefrescar();
+        }
+    }
+
+    function guardarYRefrescar() {
+        localStorage.setItem('controlHorario', JSON.stringify(registros));
+        renderizarTabla();
+    }
+
+    function renderizarTabla() {
+        const cuerpo = document.getElementById('cuerpoTabla');
+        cuerpo.innerHTML = "";
+
+        registros.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)); // Ordenar por fecha reciente
+
+        registros.forEach((reg, index) => {
+            const fila = cuerpo.insertRow();
+            fila.innerHTML = `
+                <td>${reg.fecha}</td>
+                <td>${reg.tipo}</td>
+                <td>${reg.turno1}</td>
+                <td>${reg.turno2}</td>
+                <td><strong>${reg.total} h</strong></td>
+                <td class="delete-btn">
+                    <button onclick="eliminarFila(${index})" style="background:var(--danger); color:white; padding:4px 8px; border-radius:4px;">&times;</button>
+                </td>
+            `;
+        });
+    }
+
+    function exportarCSV() {
+        if (registros.length === 0) return alert("No hay datos");
+        let csv = 'Fecha,Tipo,Turno 1,Turno 2,Total Horas\n';
+        registros.forEach(r => {
+            csv += `${r.fecha},${r.tipo},${r.turno1},${r.turno2},${r.total}\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `control_horario_${new Date().getMonth()+1}.csv`;
+        link.click();
+    }
+</script>
+
+</body>
+</html>
