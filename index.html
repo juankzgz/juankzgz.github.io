@@ -1,297 +1,317 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Horario - Versión Pro</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #64748b;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg: #f8fafc;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Horario - Versión Pro</title>
 
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); padding: 20px; color: #1e293b; }
-        .container { max-width: 950px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        
-        h1 { text-align: center; color: var(--primary); margin-bottom: 30px; }
-        
-        .form-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; padding: 15px; background: #f1f5f9; border-radius: 8px; }
-        
-        label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; cursor: pointer; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-family: inherit; }
+<style>
+:root {
+    --primary:#2563eb;
+    --secondary:#64748b;
+    --warning:#f59e0b;
+    --danger:#ef4444;
+    --bg:#f8fafc;
+}
 
-        .main-actions { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
-        
-        button { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
+body{
+    font-family:'Segoe UI',system-ui,sans-serif;
+    background:var(--bg);
+    padding:20px;
+    color:#1e293b;
+}
 
-        .btn-add { background-color: var(--primary); color: white; }
-        .btn-dnt { background-color: var(--warning); color: white; }
+.container{
+    max-width:950px;
+    margin:auto;
+    background:#fff;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 4px 6px rgba(0,0,0,.1);
+}
 
-        .dropdown { position: relative; display: inline-block; margin-left: auto; }
-        .btn-menu { background-color: var(--secondary); color: white; }
-        .dropdown-content { 
-            display: none; position: absolute; right: 0; background-color: white; 
-            min-width: 220px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
-            z-index: 10; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;
-        }
-        .dropdown-content button, .dropdown-content label { 
-            width: 100%; padding: 12px 16px; text-align: left; background: none; 
-            color: #334155; border-radius: 0; border:none; border-bottom: 1px solid #f1f5f9;
-            font-size: 0.9rem; cursor: pointer; display: block; box-sizing: border-box;
-        }
-        .dropdown-content button:hover, .dropdown-content label:hover { background-color: #f8fafc; color: var(--primary); }
-        .dropdown:hover .dropdown-content { display: block; }
+h1{text-align:center;color:var(--primary);}
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; font-size: 0.9rem; }
-        th { background-color: #f1f5f9; font-weight: 700; }
+.form-group{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:15px;
+    background:#f1f5f9;
+    padding:15px;
+    border-radius:8px;
+}
 
-        .row-dnt { background-color: #fff7ed; color: #9a3412; font-style: italic; }
-        .jornada-partida-fields { display: none; }
+label{font-size:.85rem;font-weight:700;}
+input,select{
+    width:100%;
+    padding:8px;
+    border:1px solid #cbd5e1;
+    border-radius:4px;
+}
 
-        .delete-btn-cell button { background: none; border: 1px solid #fee2e2; padding: 5px 8px; border-radius: 4px; color: var(--danger); }
-        .delete-btn-cell button:hover { background: #fee2e2; }
+.main-actions{
+    display:flex;
+    gap:10px;
+    margin:20px 0;
+    flex-wrap:wrap;
+}
 
-        @media print {
-            .form-group, .main-actions, .delete-btn-cell, .dropdown { display: none !important; }
-            .container { box-shadow: none; border: none; width: 100%; max-width: 100%; padding: 0; }
-            body { background-color: white; padding: 0; }
-        }
-    </style>
+button{
+    padding:10px 18px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+.btn-add{background:var(--primary);color:#fff;}
+.btn-dnt{background:var(--warning);color:#fff;}
+
+.dropdown{margin-left:auto;position:relative;}
+.btn-menu{background:var(--secondary);color:#fff;}
+
+.dropdown-content{
+    display:none;
+    position:absolute;
+    right:0;
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:8px;
+    min-width:220px;
+    box-shadow:0 8px 16px rgba(0,0,0,.1);
+}
+
+.dropdown:hover .dropdown-content{display:block;}
+
+.dropdown-content button,
+.dropdown-content label{
+    width:100%;
+    padding:12px 16px;
+    text-align:left;
+    background:none;
+    border:none;
+    cursor:pointer;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th,td{
+    border:1px solid #e2e8f0;
+    padding:12px;
+    text-align:center;
+}
+
+th{background:#f1f5f9;}
+
+.row-dnt{
+    background:#fff7ed;
+    font-style:italic;
+}
+
+.jornada-partida-fields{display:none;}
+
+.delete-btn-cell button{
+    background:none;
+    border:1px solid #fee2e2;
+    color:var(--danger);
+    padding:5px 8px;
+    border-radius:4px;
+}
+
+.resumen{
+    margin-top:20px;
+    padding:15px;
+    background:#f1f5f9;
+    border-radius:8px;
+    font-weight:700;
+    text-align:right;
+}
+
+@media print{
+    .form-group,.main-actions,.delete-btn-cell,.dropdown{display:none;}
+    body{background:#fff;padding:0;}
+    .container{box-shadow:none;padding:0;}
+}
+</style>
 </head>
+
 <body>
-
 <div class="container">
-    <h1>Control de Jornada Laboral</h1>
+<h1>Control de Jornada Laboral</h1>
 
-    <div class="form-group">
-        <div><label for="fecha">Fecha</label><input type="date" id="fecha"></div>
-        <div>
-            <label for="tipoJornada">Tipo de Jornada</label>
-            <select id="tipoJornada" onchange="toggleJornada()">
-                <option value="continua">Continua</option>
-                <option value="partida">Partida</option>
-            </select>
-        </div>
-        <div><label for="ent1">Entrada 1</label><input type="time" id="ent1"></div>
-        <div><label for="sal1">Salida 1</label><input type="time" id="sal1"></div>
-        <div class="jornada-partida-fields"><label for="ent2">Entrada 2</label><input type="time" id="ent2"></div>
-        <div class="jornada-partida-fields"><label for="sal2">Salida 2</label><input type="time" id="sal2"></div>
+<div class="form-group">
+    <div><label>Fecha</label><input type="date" id="fecha"></div>
+    <div>
+        <label>Tipo Jornada</label>
+        <select id="tipoJornada" onchange="toggleJornada()">
+            <option value="continua">Continua</option>
+            <option value="partida">Partida</option>
+        </select>
     </div>
+    <div><label>Entrada 1</label><input type="time" id="ent1"></div>
+    <div><label>Salida 1</label><input type="time" id="sal1"></div>
+    <div class="jornada-partida-fields"><label>Entrada 2</label><input type="time" id="ent2"></div>
+    <div class="jornada-partida-fields"><label>Salida 2</label><input type="time" id="sal2"></div>
+</div>
 
-    <div class="main-actions">
-        <button class="btn-add" onclick="agregarFila()">➕ Añadir Registro</button>
-        <button class="btn-dnt" onclick="agregarDNT()">☕ DNT (No Trabajado)</button>
+<div class="main-actions">
+    <button class="btn-add" onclick="agregarFila()">➕ Añadir</button>
+    <button class="btn-dnt" onclick="agregarDNT()">☕ DNT</button>
 
-        <div class="dropdown">
-            <button class="btn-menu">Opciones y Archivos ▾</button>
-            <div class="dropdown-content">
-                <button onclick="exportarCSV()">📥 Descargar CSV</button>
-                <label>📤 Cargar CSV/Archivo
-                    <input type="file" id="importCsv" accept=".csv, .txt" style="display:none" onchange="importarCSV(this)">
-                </label>
-                <button onclick="window.print()">📄 Guardar PDF</button>
-                <button onclick="limpiarTodo()" style="color:var(--danger)">⚠️ Borrar Todo</button>
-            </div>
+    <div class="dropdown">
+        <button class="btn-menu">Opciones ▾</button>
+        <div class="dropdown-content">
+            <button onclick="exportarCSV()">📥 Descargar CSV</button>
+            <label>📤 Cargar CSV
+                <input type="file" hidden onchange="importarCSV(this)">
+            </label>
+            <button onclick="window.print()">📄 Guardar PDF</button>
+            <button onclick="limpiarTodo()" style="color:var(--danger)">⚠️ Borrar todo</button>
         </div>
     </div>
+</div>
 
-    <table id="tablaRegistros">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Turno 1</th>
-                <th>Turno 2</th>
-                <th>Total</th>
-                <th class="delete-btn-cell">Acción</th>
-            </tr>
-        </thead>
-        <tbody id="cuerpoTabla"></tbody>
-    </table>
+<table>
+<thead>
+<tr>
+<th>Fecha</th><th>Tipo</th><th>Turno 1</th><th>Turno 2</th><th>Total</th><th class="delete-btn-cell">Acción</th>
+</tr>
+</thead>
+<tbody id="cuerpoTabla"></tbody>
+</table>
+
+<div class="resumen" id="resumenMensual">Total mensual: 00:00</div>
 </div>
 
 <script>
-    let registros = JSON.parse(localStorage.getItem('controlHorarioV3')) || [];
-    document.getElementById('fecha').valueAsDate = new Date();
-    renderizarTabla();
+let registros = JSON.parse(localStorage.getItem('controlHorarioV4')) || [];
+document.getElementById('fecha').valueAsDate = new Date();
 
-    function toggleJornada() {
-        const tipo = document.getElementById('tipoJornada').value;
-        const camposPartida = document.querySelectorAll('.jornada-partida-fields');
-        camposPartida.forEach(el => el.style.display = tipo === 'partida' ? 'block' : 'none');
+function toggleJornada(){
+    document.querySelectorAll('.jornada-partida-fields')
+    .forEach(e=>e.style.display=tipoJornada.value==='partida'?'block':'none');
+}
+
+function calcularMinutos(inicio,fin){
+    if(!inicio||!fin) return 0;
+    let [h1,m1]=inicio.split(':').map(Number);
+    let [h2,m2]=fin.split(':').map(Number);
+    let min=(h2*60+m2)-(h1*60+m1);
+    if(min<0) min+=1440;
+    return min;
+}
+
+function minutosAHora(min){
+    return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0');
+}
+
+function agregarFila(){
+    const fecha=fechaInput.value=fecha.value;
+    let totalMin=calcularMinutos(ent1.value,sal1.value);
+    let t2='-';
+
+    if(tipoJornada.value==='partida'){
+        totalMin+=calcularMinutos(ent2.value,sal2.value);
+        t2=`${ent2.value} - ${sal2.value}`;
     }
 
-    // Calcula horas gestionando turnos nocturnos (más allá de las 00:00)
-    function calcularHoras(inicio, fin) {
-        if (!inicio || !fin) return 0;
-        const [h1, m1] = inicio.split(':').map(Number);
-        const [h2, m2] = fin.split(':').map(Number);
-        let diferenciaMinutos = (h2 * 60 + m2) - (h1 * 60 + m1);
-        
-        // Si el resultado es negativo, asumimos que terminó al día siguiente
-        if (diferenciaMinutos < 0) diferenciaMinutos += 1440; 
-        
-        return diferenciaMinutos / 60;
+    registros.push({
+        id:Date.now()+Math.random(),
+        fecha,
+        tipo:tipoJornada.value.toUpperCase(),
+        t1:`${ent1.value} - ${sal1.value}`,
+        t2,
+        minutos:totalMin
+    });
+
+    limpiarInputs();
+    guardar();
+}
+
+function agregarDNT(){
+    registros.push({id:Date.now(),fecha:fecha.value,tipo:'DNT',t1:'-',t2:'-',minutos:0});
+    guardar();
+}
+
+function limpiarInputs(){ent1.value=sal1.value=ent2.value=sal2.value='';}
+
+function guardar(){
+    localStorage.setItem('controlHorarioV4',JSON.stringify(registros));
+    renderizar();
+}
+
+function renderizar(){
+    cuerpoTabla.innerHTML='';
+    let totalMes=0;
+    let mesActual=new Date(fecha.value).toISOString().slice(0,7);
+
+    [...registros].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))
+    .forEach(r=>{
+        const tr=cuerpoTabla.insertRow();
+        if(r.tipo==='DNT') tr.className='row-dnt';
+        tr.innerHTML=`
+        <td>${r.fecha}</td>
+        <td>${r.tipo}</td>
+        <td>${r.t1}</td>
+        <td>${r.t2}</td>
+        <td><strong>${minutosAHora(r.minutos)}</strong></td>
+        <td class="delete-btn-cell"><button onclick="eliminar(${r.id})">❌</button></td>`;
+        if(r.fecha.startsWith(mesActual)) totalMes+=r.minutos;
+    });
+
+    resumenMensual.textContent='Total mensual: '+minutosAHora(totalMes);
+}
+
+function eliminar(id){
+    if(confirm('¿Eliminar registro?')){
+        registros=registros.filter(r=>r.id!==id);
+        guardar();
     }
+}
 
-    function agregarFila() {
-        const fecha = document.getElementById('fecha').value;
-        const tipo = document.getElementById('tipoJornada').value;
-        const ent1 = document.getElementById('ent1').value;
-        const sal1 = document.getElementById('sal1').value;
-
-        if (!fecha || !ent1 || !sal1) return alert("Por favor, rellena los campos del primer turno.");
-
-        let total = calcularHoras(ent1, sal1);
-        let t2 = "-";
-
-        if (tipo === 'partida') {
-            const ent2 = document.getElementById('ent2').value;
-            const sal2 = document.getElementById('sal2').value;
-            if (!ent2 || !sal2) return alert("Faltan datos del segundo turno de la jornada partida.");
-            total += calcularHoras(ent2, sal2);
-            t2 = `${ent2} - ${sal2}`;
-        }
-
-        const nuevoRegistro = {
-            id: Date.now() + Math.random(), // ID único para borrado seguro
-            fecha,
-            tipo: tipo.toUpperCase(),
-            t1: `${ent1} - ${sal1}`,
-            t2: t2,
-            total: total.toFixed(2)
-        };
-
-        registros.push(nuevoRegistro);
-        limpiarInputsTiempo();
-        guardarYRefrescar();
+function limpiarTodo(){
+    if(confirm('Se borrarán todos los registros')){
+        registros=[];
+        guardar();
     }
+}
 
-    function agregarDNT() {
-        const fecha = document.getElementById('fecha').value;
-        if (!fecha) return alert("Selecciona una fecha primero.");
-        
-        registros.push({
-            id: Date.now(),
-            fecha,
-            tipo: 'DNT',
-            t1: '-',
-            t2: '-',
-            total: '0.00'
-        });
-        guardarYRefrescar();
-    }
+function exportarCSV(){
+    let csv="Fecha,Tipo,Turno1,Turno2,Total\n";
+    registros.forEach(r=>csv+=`${r.fecha},${r.tipo},${r.t1},${r.t2},${minutosAHora(r.minutos)}\n`);
+    let a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download='control_horario.csv';
+    a.click();
+}
 
-    function limpiarInputsTiempo() {
-        document.getElementById('ent1').value = "";
-        document.getElementById('sal1').value = "";
-        document.getElementById('ent2').value = "";
-        document.getElementById('sal2').value = "";
-    }
-
-    function guardarYRefrescar() {
-        localStorage.setItem('controlHorarioV3', JSON.stringify(registros));
-        renderizarTabla();
-    }
-
-    function renderizarTabla() {
-        const cuerpo = document.getElementById('cuerpoTabla');
-        cuerpo.innerHTML = "";
-        
-        // Ordenamos una copia para no alterar el array original al renderizar
-        const registrosOrdenados = [...registros].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
-
-        registrosOrdenados.forEach((reg) => {
-            const fila = cuerpo.insertRow();
-            if(reg.tipo === 'DNT') fila.className = 'row-dnt';
-            
-            fila.innerHTML = `
-                <td>${reg.fecha}</td>
-                <td>${reg.tipo}</td>
-                <td>${reg.t1}</td>
-                <td>${reg.t2}</td>
-                <td><strong>${reg.total} h</strong></td>
-                <td class="delete-btn-cell">
-                    <button onclick="eliminarRegistro(${reg.id})" title="Borrar fila">❌</button>
-                </td>
-            `;
-        });
-    }
-
-    function eliminarRegistro(id) {
-        if(confirm("¿Estás seguro de que quieres eliminar este registro?")) {
-            registros = registros.filter(r => r.id !== id);
-            guardarYRefrescar();
-        }
-    }
-
-    function exportarCSV() {
-        if (registros.length === 0) return alert("No hay datos para exportar.");
-        let csv = "\ufeffFecha,Tipo,Turno1,Turno2,Total\n";
-        registros.forEach(r => {
-            csv += `${r.fecha},${r.tipo},${r.t1},${r.t2},${r.total}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `control_horario_${new Date().toISOString().slice(0,10)}.csv`;
-        link.click();
-    }
-
-    function importarCSV(input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const contenido = e.target.result;
-                const lineas = contenido.split(/\r?\n/).filter(l => l.trim() !== "");
-                const nuevos = [];
-
-                lineas.forEach((linea) => {
-                    if (linea.toLowerCase().includes("fecha")) return; // Saltar cabecera
-
-                    // Detectar separador común
-                    const sep = linea.includes(';') ? ';' : ',';
-                    const col = linea.split(sep).map(c => c.replace(/["']/g, "").trim());
-                    
-                    if (col.length >= 5) {
-                        nuevos.push({
-                            id: Date.now() + Math.random(),
-                            fecha: col[0],
-                            tipo: col[1].toUpperCase(),
-                            t1: col[2],
-                            t2: col[3],
-                            total: col[4].replace(',', '.').replace(/[^\d.]/g, '') || "0.00"
-                        });
-                    }
+function importarCSV(i){
+    const r=new FileReader();
+    r.onload=e=>{
+        e.target.result.split(/\r?\n/).forEach(l=>{
+            let c=l.split(',');
+            if(c.length>=5 && c[0]!=='Fecha'){
+                let [h,m]=c[4].split(':').map(Number);
+                registros.push({
+                    id:Date.now()+Math.random(),
+                    fecha:c[0],
+                    tipo:c[1],
+                    t1:c[2],
+                    t2:c[3],
+                    minutos:(h*60+m)||0
                 });
-
-                if (nuevos.length > 0 && confirm(`¿Importar ${nuevos.length} registros?`)) {
-                    registros = [...registros, ...nuevos];
-                    guardarYRefrescar();
-                }
-            } catch (err) {
-                alert("Error al procesar el archivo CSV.");
             }
-            input.value = ""; 
-        };
-        reader.readAsText(file, "ISO-8859-1"); 
-    }
+        });
+        guardar();
+    };
+    r.readAsText(i.files[0]);
+}
 
-    function limpiarTodo() {
-        if(confirm("¡ATENCIÓN! Se borrarán todos los registros permanentemente. ¿Continuar?")) {
-            registros = [];
-            guardarYRefrescar();
-        }
-    }
+renderizar();
 </script>
 </body>
 </html>
