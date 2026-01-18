@@ -406,8 +406,14 @@ if (r.tipo !== 'DNT') {
         }
     });
 
-    resumenMensual.textContent =
-        'Total mensual: ' + minutosAHora(totalMes);
+    const fechaMes = new Date(mesActual + '-01');
+const nombreMes = fechaMes.toLocaleDateString('es-ES', {
+    month: 'long',
+    year: 'numeric'
+});
+
+resumenMensual.textContent =
+    `Total ${nombreMes}: ${minutosAHora(totalMes)}`;
 }
 
 function eliminar(id){
