@@ -153,6 +153,41 @@ th{background:#f1f5f9;}
     color: #78350f;
     font-weight: 700;
 }
+.leyenda {
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+}
+
+.leyenda-item {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Colores solo para la leyenda */
+.leyenda-item.dnt {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.leyenda-item.domingo {
+    background-color: #fecaca;
+    color: #7f1d1d;
+}
+
+.leyenda-item.festivo {
+    background-color: #fef3c7;
+    color: #78350f;
+}
+
+.leyenda-item.domingo-festivo {
+    background-color: #fed7aa;
+    color: #7c2d12;
+}
+    
 </style>
 </head>
 
@@ -203,7 +238,12 @@ th{background:#f1f5f9;}
 
 <div class="resumen" id="resumenMensual">Total mensual: 00:00</div>
 </div>
-
+<div class="leyenda">
+    <span class="leyenda-item dnt">DNT</span>
+    <span class="leyenda-item domingo">Domingo</span>
+    <span class="leyenda-item festivo">Festivo</span>
+    <span class="leyenda-item domingo-festivo">Domingo festivo</span>
+</div>
 <script>
 let registros = JSON.parse(localStorage.getItem('controlHorarioV4')) || [];
 document.getElementById('fecha').valueAsDate = new Date();
