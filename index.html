@@ -136,6 +136,23 @@ th{background:#f1f5f9;}
     body{background:#fff;padding:0;}
     .container{box-shadow:none;padding:0;}
 }
+    .row-domingo {
+    background-color: #fee2e2; /* rojo suave */
+    color: #991b1b;
+    font-weight: 600;
+}
+
+.row-festivo {
+    background-color: #fef9c3; /* amarillo suave */
+    color: #854d0e;
+    font-weight: 600;
+}
+
+.row-domingo-festivo {
+    background-color: #fde68a; /* naranja */
+    color: #78350f;
+    font-weight: 700;
+}
 </style>
 </head>
 
@@ -178,7 +195,7 @@ th{background:#f1f5f9;}
 <table>
 <thead>
 <tr>
-<th>Fecha</th><th>Tipo</th><th>Turno 1</th><th>Turno 2</th><th>Total</th><th class="delete-btn-cell">Acción</th>
+<th>Fecha</th><th>Tipo</th><th>T1</th><th>T2</th><th>Horas</th><th class="delete-btn-cell">Acción</th>
 </tr>
 </thead>
 <tbody id="cuerpoTabla"></tbody>
@@ -273,37 +290,84 @@ function guardar(){
     localStorage.setItem('controlHorarioV4',JSON.stringify(registros));
     renderizar();
 }
+
+function esFestivo(fechaISO) {
+    const festivos = [
+        '2026-01-01', // Año Nuevo
+        '2026-01-06', // Reyes
+        '2026-01-29', // San Valero 
+        '2026-03-05', // Cincomarzada
+        '2026-04-02', // Jueves Santo 
+        '2026-04-03', // Viernes Santo
+        '2026-04-23', // San Jorge 
+        '2026-05-01', // Día del Trabajador
+        '2026-07-29', // Santa Marta 
+        '2026-08-15', // Asunción
+        '2026-10-12', // Fiesta Nacional
+        '2026-11-02', // Todos los santos 
+        '2026-12-07', // Día de la Constitución 
+        '2026-12-08', // Inmaculada Concepción 
+        '2026-12-25'  // Navidad
+    ];
+    return festivos.includes(fechaISO);
+}
+    
 function formatearFecha(fechaISO) {
-    const dias = ['DO','LU','MA','MI','JU','VI','SÁ'];
-    const f = new Date(fechaISO + 'T00:00:00');
-    const dia = dias[f.getDay()];
-
-    const d = String(f.getDate()).padStart(2,'0');
-    const m = String(f.getMonth()+1).padStart(2,'0');
-    const y = String(f.getFullYear()).slice(2);
-
-    return `${dia} ${d}/${m}/${y}`;
+    const [y, m, d] = fechaISO.split('-');
+    return `${d}/${m}/${y.slice(2)}`;
 }
 function renderizar(){
     cuerpoTabla.innerHTML='';
-    let totalMes=0;
-    let mesActual=new Date(fecha.value).toISOString().slice(0,7);
+    let totalMes = 0;
+    let mesActual = new Date(fecha.value).toISOString().slice(0,7);
 
-    [...registros].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))
-    .forEach(r=>{
-        const tr=cuerpoTabla.insertRow();
-        if(r.tipo==='DNT') tr.className='row-dnt';
-        tr.innerHTML=`
-        <td>${formatearFecha(r.fecha)}</td>
-        <td>${r.tipo}</td>
-        <td>${r.t1}</td>
-        <td>${r.t2}</td>
-        <td><strong>${minutosAHora(r.minutos)}</strong></td>
-        <td class="delete-btn-cell"><button onclick="eliminar(${r.id})">❌</button></td>`;
-        if(r.fecha.startsWith(mesActual)) totalMes+=r.minutos;
+    [...registros]
+    .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))
+    .forEach(r => {
+
+        // 1️⃣ Crear fila
+        const tr = cuerpoTabla.insertRow();
+
+        // 2️⃣ Marcar DNT si procede
+        if (r.tipo === 'DNT') {
+            tr.classList.add('row-dnt');
+        }
+
+        // 3️⃣ Rellenar celdas
+        tr.innerHTML = `
+            <td>${formatearFecha(r.fecha)}</td>
+            <td>${r.tipo}</td>
+            <td>${r.t1}</td>
+            <td>${r.t2}</td>
+            <td><strong>${minutosAHora(r.minutos)}</strong></td>
+            <td class="delete-btn-cell">
+                <button onclick="eliminar(${r.id})">❌</button>
+            </td>
+        `;
+
+        // 🔴🟡 DETECTAR DOMINGO Y FESTIVO (SIN SOBREESCRIBIR DNT)
+if (r.tipo !== 'DNT') {
+    const fechaObj = new Date(r.fecha + 'T00:00:00');
+    const esDomingo = fechaObj.getDay() === 0;
+    const festivo = esFestivo(r.fecha);
+
+    if (esDomingo && festivo) {
+        tr.classList.add('row-domingo-festivo');
+    } else if (esDomingo) {
+        tr.classList.add('row-domingo');
+    } else if (festivo) {
+        tr.classList.add('row-festivo');
+    }
+}
+
+        // 5️⃣ Sumar total mensual
+        if (r.fecha.startsWith(mesActual)) {
+            totalMes += r.minutos;
+        }
     });
 
-    resumenMensual.textContent='Total mensual: '+minutosAHora(totalMes);
+    resumenMensual.textContent =
+        'Total mensual: ' + minutosAHora(totalMes);
 }
 
 function eliminar(id){
