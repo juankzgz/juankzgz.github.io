@@ -46,7 +46,15 @@ button {
 </head>
 
 <body>
+<div id="authPanel" style="padding:20px;background:#111;color:white;">
+  <h2>TrackPro Login</h2>
+  <input type="email" id="email" placeholder="Email" /><br><br>
+  <input type="password" id="password" placeholder="Contraseña" /><br><br>
+  <button onclick="register()">Registrarse</button>
+  <button onclick="login()">Entrar</button>
+</div>
 
+<div id="appContent" style="display:none;">
 <div id="map"></div>
 
 <div class="panel">
@@ -170,6 +178,67 @@ function exportGPX() {
 <script async
 src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwavt65EqMCD8jR5CHIkLFLPc8kVboOy8&callback=initMap">
 </script>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  const firebaseConfig = {
+  apiKey: "AIzaSyCPNP7rnrf_qhS7E6jluzeGSz9C0sIKpN0",
+  authDomain: "trackpro-a2606.firebaseapp.com",
+  projectId: "trackpro-a2606",
+  storageBucket: "trackpro-a2606.firebasestorage.app",
+  messagingSenderId: "819413221861",
+  appId: "1:819413221861:web:f0a3afeee4555727b06f0c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // REGISTRO
+  window.register = async function() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Usuario registrado");
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  // LOGIN
+  window.login = async function() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  // LOGOUT
+  window.logout = async function() {
+    await signOut(auth);
+  }
+
+  // ESTADO SESIÓN
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("authPanel").style.display = "none";
+      document.getElementById("appContent").style.display = "block";
+    } else {
+      document.getElementById("authPanel").style.display = "block";
+      document.getElementById("appContent").style.display = "none";
+    }
+  });
+
+</script>
+</div>
 </body>
 </html>
