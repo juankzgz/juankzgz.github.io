@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>GPS Tracker Pro</title>
 
 <style>
@@ -42,6 +42,34 @@ button {
 .pause { background:#f59e0b; color:white; }
 .stop { background:#ef4444; color:white; }
 .export { background:#2563eb; color:white; }
+
+  
+  #authPanel input {
+    width: 90%;
+    padding: 12px;
+    margin: 8px 0;
+    font-size: 18px;         /* texto visible en móviles */
+    color: #111;             /* texto oscuro */
+    background: #fff;        /* fondo claro para contraste */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+
+  #authPanel button {
+    padding: 12px;
+    font-size: 18px;
+    margin-top: 8px;
+    border-radius: 8px;
+  }
+
+  /* Ajuste para móviles */
+  @media (max-width: 600px) {
+    #authPanel {
+      padding: 20px;
+      font-size: 18px;
+    }
+  }
+
 </style>
 </head>
 
@@ -246,7 +274,13 @@ window.saveRouteToFirebase = async function(routeData) {
       alert(error.message);
     }
   }
-
+document.querySelectorAll('#authPanel input').forEach(input => {
+  input.addEventListener('focus', () => {
+    setTimeout(() => {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  });
+});
   // LOGOUT
   window.logout = async function() {
     await signOut(auth);
