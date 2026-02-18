@@ -43,43 +43,57 @@ button {
 .stop { background:#ef4444; color:white; }
 .export { background:#2563eb; color:white; }
 
-  
   #authPanel input {
-    width: 90%;
-    padding: 12px;
-    margin: 8px 0;
-    font-size: 18px;         /* texto visible en móviles */
-    color: #111;             /* texto oscuro */
-    background: #fff;        /* fondo claro para contraste */
-    border: 1px solid #ccc;
-    border-radius: 8px;
-  }
+  width: 90%;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 18px;        /* tamaño legible en móviles */
+  color: #111;            /* texto oscuro */
+  background: #fff;       /* fondo claro para contraste */
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
 
-  #authPanel button {
-    padding: 12px;
+#authPanel button {
+  width: 95%;
+  padding: 12px;
+  font-size: 18px;
+  margin-top: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#authPanel button:hover {
+  opacity: 0.9;
+}
+
+/* Ajuste para móviles */
+@media (max-width: 600px) {
+  #authPanel {
+    padding: 20px;
     font-size: 18px;
-    margin-top: 8px;
-    border-radius: 8px;
   }
+}
 
-  /* Ajuste para móviles */
-  @media (max-width: 600px) {
-    #authPanel {
-      padding: 20px;
-      font-size: 18px;
-    }
-  }
+/* Scroll automático para teclado móvil */
+#authPanel input:focus {
+  outline: 2px solid #2563eb;
+}
 
 </style>
 </head>
 
 <body>
-<div id="authPanel" style="padding:20px;background:#111;color:white;">
-  <h2>TrackPro Login</h2>
-  <input type="email" id="email" placeholder="Email" /><br><br>
-  <input type="password" id="password" placeholder="Contraseña" /><br><br>
+<div id="authPanel" style="padding:20px; background:#111; color:white; max-width:400px; margin:auto; border-radius:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+  <h2 style="text-align:center;">TrackPro Login</h2>
+
+  <input type="email" id="email" placeholder="Correo electrónico" />
+  <input type="password" id="password" placeholder="Contraseña" />
+  
   <button onclick="register()">Registrarse</button>
   <button onclick="login()">Entrar</button>
+  <button onclick="signInWithGoogle()" style="background:#4285F4; color:white; border:none;">Entrar con Google</button>
 </div>
 
 <div id="appContent" style="display:none;">
@@ -211,69 +225,80 @@ function exportGPX() {
 <script async
 src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwavt65EqMCD8jR5CHIkLFLPc8kVboOy8&callback=initMap">
 </script>
-<!-- Firebase SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-window.saveRouteToFirebase = async function(routeData) {
-  const user = auth.currentUser;
-  if (!user) return;
+<!-- Firebase SDK --><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  try {
-    await addDoc(collection(db, "routes"), {
-      userId: user.uid,
-      date: new Date(),
-      distance: routeData.distance,
-      duration: routeData.duration,
-      points: routeData.points,
-      createdAt: serverTimestamp()
-    });
-
-    alert("Ruta guardada correctamente");
-  } catch (error) {
-    alert("Error guardando ruta: " + error.message);
-  }
-}
-  
-  const firebaseConfig = {
+// --- CONFIGURACIÓN FIREBASE ---
+const firebaseConfig = {
   apiKey: "AIzaSyCPNP7rnrf_qhS7E6jluzeGSz9C0sIKpN0",
   authDomain: "trackpro-a2606.firebaseapp.com",
   projectId: "trackpro-a2606",
   storageBucket: "trackpro-a2606.firebasestorage.app",
   messagingSenderId: "819413221861",
   appId: "1:819413221861:web:f0a3afeee4555727b06f0c"
-  };
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-  // REGISTRO
-  window.register = async function() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+// --- REGISTRO ---
+window.register = async function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert("Usuario registrado");
-    } catch (error) {
-      alert(error.message);
-    }
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    alert("Usuario registrado");
+  } catch (error) {
+    alert(error.message);
   }
+}
 
-  // LOGIN
-  window.login = async function() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+// --- LOGIN EMAIL/PASSWORD ---
+window.login = async function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      alert(error.message);
-    }
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    alert(error.message);
   }
+}
+
+// --- LOGIN GOOGLE ---
+window.signInWithGoogle = async function() {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    alert("Bienvenido " + user.displayName);
+    // Aquí puedes crear el profile en Firestore si es nuevo
+  } catch (error) {
+    alert("Error Google Login: " + error.message);
+  }
+}
+
+// --- LOGOUT ---
+window.logout = async function() {
+  await signOut(auth);
+}
+
+// --- ESTADO DE SESIÓN ---
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("authPanel").style.display = "none";
+    document.getElementById("appContent").style.display = "block";
+  } else {
+    document.getElementById("authPanel").style.display = "block";
+    document.getElementById("appContent").style.display = "none";
+  }
+});
+
+// --- SCROLL AUTOMÁTICO PARA MÓVILES ---
 document.querySelectorAll('#authPanel input').forEach(input => {
   input.addEventListener('focus', () => {
     setTimeout(() => {
@@ -281,21 +306,7 @@ document.querySelectorAll('#authPanel input').forEach(input => {
     }, 300);
   });
 });
-  // LOGOUT
-  window.logout = async function() {
-    await signOut(auth);
-  }
-
-  // ESTADO SESIÓN
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      document.getElementById("authPanel").style.display = "none";
-      document.getElementById("appContent").style.display = "block";
-    } else {
-      document.getElementById("authPanel").style.display = "block";
-      document.getElementById("appContent").style.display = "none";
-    }
-  });
+</script>
 
 </script>
 </div>
