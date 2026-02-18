@@ -132,6 +132,11 @@ function pauseTracking() {
 function stopTracking() {
   pauseTracking();
 }
+  saveRouteToFirebase({
+  distance: totalDistance,
+  duration: Date.now() - startTime,
+  points: path
+});
 
 function updateTimer() {
   let diff = Date.now() - startTime;
@@ -183,7 +188,27 @@ src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwavt65EqMCD8jR5CHIkLFLPc
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+window.saveRouteToFirebase = async function(routeData) {
+  const user = auth.currentUser;
+  if (!user) return;
 
+  try {
+    await addDoc(collection(db, "routes"), {
+      userId: user.uid,
+      date: new Date(),
+      distance: routeData.distance,
+      duration: routeData.duration,
+      points: routeData.points,
+      createdAt: serverTimestamp()
+    });
+
+    alert("Ruta guardada correctamente");
+  } catch (error) {
+    alert("Error guardando ruta: " + error.message);
+  }
+}
+  
   const firebaseConfig = {
   apiKey: "AIzaSyCPNP7rnrf_qhS7E6jluzeGSz9C0sIKpN0",
   authDomain: "trackpro-a2606.firebaseapp.com",
