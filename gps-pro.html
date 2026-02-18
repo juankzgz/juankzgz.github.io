@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS Tracker Pro</title>
+
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background:#111;
+  color:white;
+}
+
+#map {
+  height: 60vh;
+  width: 100%;
+}
+
+.panel {
+  padding:15px;
+  background:#1c1c1c;
+}
+
+.stats {
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:15px;
+}
+
+button {
+  padding:10px 15px;
+  margin:5px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.start { background:#22c55e; color:white; }
+.pause { background:#f59e0b; color:white; }
+.stop { background:#ef4444; color:white; }
+.export { background:#2563eb; color:white; }
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div class="panel">
+  <div class="stats">
+    <div>⏱ Tiempo: <span id="time">00:00:00</span></div>
+    <div>📏 Distancia: <span id="distance">0.00</span> km</div>
+    <div>🚀 Velocidad: <span id="speed">0</span> km/h</div>
+  </div>
+
+  <button class="start" onclick="startTracking()">Iniciar</button>
+  <button class="pause" onclick="pauseTracking()">Pausar</button>
+  <button class="stop" onclick="stopTracking()">Finalizar</button>
+  <button class="export" onclick="exportGPX()">Exportar GPX</button>
+</div>
+
+<script>
+let map;
+let path = [];
+let polyline;
+let watchId;
+let startTime;
+let timerInterval;
+let totalDistance = 0;
+
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 17,
+    center: { lat: 40.4168, lng: -3.7038 }
+  });
+
+  polyline = new google.maps.Polyline({
+    path: path,
+    geodesic: true,
+    strokeColor: "#22c55e",
+    strokeWeight: 4
+  });
+
+  polyline.setMap(map);
+}
+
+function startTracking() {
+  if (!navigator.geolocation) return alert("GPS no soportado");
+
+  startTime = Date.now();
+  timerInterval = setInterval(updateTimer, 1000);
+
+  watchId = navigator.geolocation.watchPosition(pos => {
+    const point = {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude
+    };
+
+    if (path.length > 0) {
+      totalDistance += calculateDistance(path[path.length-1], point);
+      document.getElementById("distance").innerText = (totalDistance/1000).toFixed(2);
+    }
+
+    document.getElementById("speed").innerText =
+      (pos.coords.speed ? (pos.coords.speed*3.6).toFixed(1) : 0);
+
+    path.push(point);
+    polyline.setPath(path);
+    map.setCenter(point);
+
+  }, err => alert("Error GPS"), {
+    enableHighAccuracy:true
+  });
+}
+
+function pauseTracking() {
+  navigator.geolocation.clearWatch(watchId);
+  clearInterval(timerInterval);
+}
+
+function stopTracking() {
+  pauseTracking();
+}
+
+function updateTimer() {
+  let diff = Date.now() - startTime;
+  let h = Math.floor(diff/3600000);
+  let m = Math.floor((diff%3600000)/60000);
+  let s = Math.floor((diff%60000)/1000);
+
+  document.getElementById("time").innerText =
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function calculateDistance(p1, p2) {
+  const R = 6371000;
+  const dLat = (p2.lat - p1.lat) * Math.PI/180;
+  const dLng = (p2.lng - p1.lng) * Math.PI/180;
+
+  const a =
+    Math.sin(dLat/2)*Math.sin(dLat/2) +
+    Math.cos(p1.lat*Math.PI/180) *
+    Math.cos(p2.lat*Math.PI/180) *
+    Math.sin(dLng/2)*Math.sin(dLng/2);
+
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function exportGPX() {
+  let gpx = `<?xml version="1.0"?><gpx version="1.1" creator="GPS Pro">`;
+  gpx += "<trk><name>Mi Recorrido</name><trkseg>";
+
+  path.forEach(p=>{
+    gpx += `<trkpt lat="${p.lat}" lon="${p.lng}"></trkpt>`;
+  });
+
+  gpx += "</trkseg></trk></gpx>";
+
+  let blob = new Blob([gpx], {type:"application/gpx+xml"});
+  let link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "recorrido.gpx";
+  link.click();
+}
+</script>
+
+<script async
+src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY&callback=initMap">
+</script>
+
+</body>
+</html>
