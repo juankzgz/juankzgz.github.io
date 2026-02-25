@@ -361,8 +361,8 @@ function renderizar(){
     let mesActual = new Date(fecha.value).toISOString().slice(0,7);
 
     [...registros]
-    .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha))
-    .forEach(r => {
+.sort((a,b)=>new Date(a.fecha)-new Date(b.fecha))
+.forEach(r => {
 
         // 1️⃣ Crear fila
         const tr = cuerpoTabla.insertRow();
