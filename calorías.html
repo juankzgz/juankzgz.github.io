@@ -98,4 +98,55 @@
 
         buscador.oninput = function() {
             const filtro = buscador.value.toLowerCase();
-            const filtrados = nombresOrdenados.filter(n => n.toLowerCase().includes(fil
+            const filtrados = nombresOrdenados.filter(n => n.toLowerCase().includes(filtro));
+            llenarSelector(selector, filtrados);
+        };
+
+        colSelect.appendChild(buscador);
+        colSelect.appendChild(selector);
+
+        const inputGramos = document.createElement("input");
+        inputGramos.type = "number";
+        inputGramos.placeholder = "Gramos";
+        inputGramos.min = "0";
+
+        const btnEliminar = document.createElement("button");
+        btnEliminar.innerHTML = "&times;";
+        btnEliminar.className = "btn btn-remove";
+        btnEliminar.onclick = () => div.remove();
+
+        div.appendChild(colSelect);
+        div.appendChild(inputGramos);
+        div.appendChild(btnEliminar);
+        contenedor.appendChild(div);
+    }
+
+    function llenarSelector(select, lista) {
+        select.innerHTML = "";
+        lista.forEach(nombre => {
+            const option = document.createElement("option");
+            option.value = baseDeDatos[nombre];
+            option.text = `${nombre} (${baseDeDatos[nombre]} kcal)`;
+            select.appendChild(option);
+        });
+    }
+
+    function calcularTotal() {
+        const filas = document.querySelectorAll(".row");
+        let total = 0;
+        filas.forEach(fila => {
+            const kcal100 = parseFloat(fila.querySelector("select").value);
+            const gramos = parseFloat(fila.querySelector("input[type='number']").value);
+            if (!isNaN(gramos)) {
+                total += (kcal100 * gramos) / 100;
+            }
+        });
+        document.getElementById("resultado").innerText = `Total Menú: ${total.toFixed(2)} kcal`;
+    }
+
+    // Iniciar con una fila
+    agregarFila();
+</script>
+
+</body>
+</html>
