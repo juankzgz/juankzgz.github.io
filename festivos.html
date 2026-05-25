@@ -104,7 +104,7 @@
         .btn-pdf {
             background-color: var(--secondary);
             margin-bottom: 15px;
-        } tracker
+        }
         .btn-pdf:hover {
             background-color: var(--primary);
         }
@@ -220,7 +220,6 @@
 
     // Base de datos inteligente que cambia los festivos según el año seleccionado
     function obtenerFestivos(anio) {
-        // Festivos fijos que no cambian de día del mes (Formato: 'MES-DIA')
         let festivos = [
             '0-1',   // 1 Ene: Año Nuevo
             '0-6',   // 6 Ene: Reyes
@@ -236,15 +235,15 @@
         ];
 
         if (anio === 2025) {
-            festivos.push('3-17');  // Jueves Santo 2025 (17 de Abril)
-            festivos.push('3-18');  // Viernes Santo 2025 (18 de Abril)
-            festivos.push('9-13');  // El Pilar 2025: Cae en domingo, se traslada al lunes 13 de Octubre
-            festivos.push('10-1');  // Todos los Santos 2025: 
+            festivos.push('3-17');  // Jueves Santo 2025
+            festivos.push('3-18');  // Viernes Santo 2025
+            festivos.push('9-13');  // El Pilar 2025
+            festivos.push('10-1');  // Todos los Santos 2025
         } else if (anio === 2026) {
-            festivos.push('3-2');   // Jueves Santo 2026 (2 de Abril)
-            festivos.push('3-3');   // Viernes Santo 2026 (3 de Abril)
-            festivos.push('9-12');  // El Pilar 2026 (12 de Octubre)
-            festivos.push('10-2');  // Todos los Santos 2026 se traslada al lunes 2 de Noviembre
+            festivos.push('3-2');   // Jueves Santo 2026
+            festivos.push('3-3');   // Viernes Santo 2026
+            festivos.push('9-12');  // El Pilar 2026
+            festivos.push('10-2');  // Todos los Santos 2026
         }
         return festivos;
     }
@@ -295,6 +294,9 @@
         const tbody = document.getElementById('tablaResultados').getElementsByTagName('tbody')[0];
         const nuevaFila = tbody.insertRow();
 
+        // Guardamos el índice numérico del mes en un atributo 'data-mes' para ordenar fácilmente después
+        nuevaFila.setAttribute('data-mes', mesIndex);
+
         nuevaFila.innerHTML = `
             <td>${mesTexto}</td>
             <td>${anio}</td>
@@ -306,6 +308,32 @@
             <td style="font-weight: bold; color: #1e3a8a;">${totalNomina.toFixed(2)} €</td>
             <td><button class="btn-delete" onclick="eliminarFila(this)">Eliminar</button></td>
         `;
+
+        // Llamamos a la función para ordenar automáticamente tras añadir
+        ordenarTabla();
+    }
+
+    function ordenarTabla() {
+        const tbody = document.getElementById('tablaResultados').getElementsByTagName('tbody')[0];
+        const filas = Array.from(tbody.rows);
+
+        filas.sort((a, b) => {
+            const anioA = parseInt(a.cells[1].innerText);
+            const anioB = parseInt(b.cells[1].innerText);
+            
+            // Comparamos los años
+            if (anioA !== anioB) {
+                return anioA - anioB;
+            }
+            
+            // Si el año es el mismo, comparamos el índice numérico del mes guardado en el atributo
+            const mesA = parseInt(a.getAttribute('data-mes'));
+            const mesB = parseInt(b.getAttribute('data-mes'));
+            return mesA - mesB;
+        });
+
+        // Volvemos a añadir las filas ordenadas al tbody
+        filas.forEach(fila => tbody.appendChild(fila));
     }
 
     function eliminarFila(boton) {
