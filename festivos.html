@@ -349,7 +349,7 @@
         doc.setFontSize(16);
         doc.setTextColor(30, 58, 138); 
         doc.text("Resumen de Pluses - Domingos y Festivos", 14, 20);
-        doc.setFont("helvetica");
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(14);
         doc.setTextColor(30, 58, 138);
         doc.text("Juan Carlos Cardona Lorente", 14, 25);
@@ -400,9 +400,9 @@
             doc.text(celdas[1].innerText, 38, y);
             doc.text(celdas[2].innerText, 57, y);
             doc.text(celdas[3].innerText, 72, y);
-            doc.text(celdas[4].innerText, 88, y);
-            doc.text(celdas[5].innerText, 110, y);
-            doc.text(celdas[6].innerText, 145, y);
+            doc.text(celdas[4].innerText, 88, y, { align: 'right' });
+            doc.text(celdas[5].innerText, 110, y, { align: 'right' });
+            doc.text(celdas[6].innerText, 145, y, { align: 'right' });
             
             doc.setFont("helvetica", "bold");
             doc.text(celdas[7].innerText, 175, y);
