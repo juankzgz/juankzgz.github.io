@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora Automática Plus Hostelería Zaragoza</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --primary: #1e3a8a;
@@ -79,9 +80,10 @@
         }
 
         .auto-calculated {
-            background-color: #e2e8f0;
+            background-color: white;
             font-weight: bold;
             color: #334155;
+            border: 2px solid var(--secondary);
         }
 
         button {
@@ -99,10 +101,18 @@
             background-color: var(--secondary);
         }
 
+        .btn-pdf {
+            background-color: var(--secondary);
+            margin-bottom: 15px;
+        } tracker
+        .btn-pdf:hover {
+            background-color: var(--primary);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 5px;
         }
 
         th, td {
@@ -141,10 +151,9 @@
     <h1>Calculadora Automática de Pluses (Zaragoza)</h1>
     <div class="convenio-info">
         <strong>Convenio Colectivo Zaragoza:</strong> Domingos (12,61 €) | Festivos (25,00 €).<br>
-        <em>*El sistema calcula automáticamente los domingos y festivos oficiales de Zaragoza (incluyendo San Valero, la Cincomarzada y <strong>Santa Marta el 29 de Julio</strong>).</em>
+        <em>*El sistema calcula automáticamente los domingos y los festivos específicos según el calendario laboral de <strong>2025 y 2026</strong> en Zaragoza (incluye San Valero, Cincomarzada, Semana Santa y Santa Marta). Modificables manualmente.</em>
     </div>
 
-    <!-- Formulario de entrada -->
     <div class="form-row">
         <div class="form-group">
             <label for="mes">Mes</label>
@@ -165,7 +174,7 @@
         </div>
         <div class="form-group">
             <label for="anio">Año</label>
-            <input type="number" id="anio" value="2026" min="2025" max="2030" onchange="calcularCalendario()">
+            <input type="number" id="anio" value="2025" min="2025" max="2026" onchange="calcularCalendario()">
         </div>
         <div class="form-group">
             <label for="domingos">Domingos del Mes</label>
@@ -182,7 +191,8 @@
         <button onclick="agregarFila()">Añadir a Nómina</button>
     </div>
 
-    <!-- Tabla de resultados -->
+    <button class="btn-pdf" onclick="generarPDF()">📥 Descargar PDF con los resultados</button>
+
     <table id="tablaResultados">
         <thead>
             <tr>
@@ -198,7 +208,6 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Contenido dinámico -->
         </tbody>
     </table>
 </div>
@@ -207,27 +216,38 @@
     const PRECIO_DOMINGO = 12.61;
     const PRECIO_FESTIVO = 25.00;
 
-    // Base de datos de festivos oficiales para Zaragoza
-    // Formato: 'MES-DIA' (Enero es 0, Diciembre es 11)
-    const festivosZaragoza = [
-        '0-1',   // 1 Ene: Año Nuevo
-        '0-6',   // 6 Ene: Reyes
-        '0-29',  // 29 Ene: San Valero (Local ZGZ)
-        '2-5',   // 5 Mar: Cincomarzada (Local ZGZ)
-        '3-2',   // Jueves Santo (Variable, fijado para 2026)
-        '3-3',   // Viernes Santo (Variable, fijado para 2026)
-        '3-23',  // 23 Abr: San Jorge / Día de Aragón
-        '4-1',   // 1 May: Fiesta del Trabajo
-        '6-29',  // 29 Jul: Santa Marta (Patrona Hostelería) ¡AÑADIDO!
-        '7-15',  // 15 Ago: Asunción de la Virgen
-        '9-12',  // 12 Oct: Fiesta Nacional / El Pilar
-        '10-2',  // 2 Nov: Traslado Todos los Santos (Para 2026)
-        '11-6',  // 6 Dic: Día de la Constitución
-        '11-8',  // 8 Dic: Inmaculada Concepción
-        '11-25'  // 25 Dic: Natividad del Señor
-    ];
-
     const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    // Base de datos inteligente que cambia los festivos según el año seleccionado
+    function obtenerFestivos(anio) {
+        // Festivos fijos que no cambian de día del mes (Formato: 'MES-DIA')
+        let festivos = [
+            '0-1',   // 1 Ene: Año Nuevo
+            '0-6',   // 6 Ene: Reyes
+            '0-29',  // 29 Ene: San Valero
+            '2-5',   // 5 Mar: Cincomarzada
+            '3-23',  // 23 Abr: San Jorge
+            '4-1',   // 1 May: Día del Trabajo
+            '6-29',  // 29 Jul: Santa Marta (Patrona Hostelería)
+            '7-15',  // 15 Ago: Asunción de la Virgen
+            '11-6',  // 6 Dic: Constitución
+            '11-8',  // 8 Dic: Inmaculada Concepción
+            '11-25'  // 25 Dic: Navidad
+        ];
+
+        if (anio === 2025) {
+            festivos.push('3-17');  // Jueves Santo 2025 (17 de Abril)
+            festivos.push('3-18');  // Viernes Santo 2025 (18 de Abril)
+            festivos.push('9-13');  // El Pilar 2025: Cae en domingo, se traslada al lunes 13 de Octubre
+            festivos.push('10-1');  // Todos los Santos 2025: 
+        } else if (anio === 2026) {
+            festivos.push('3-2');   // Jueves Santo 2026 (2 de Abril)
+            festivos.push('3-3');   // Viernes Santo 2026 (3 de Abril)
+            festivos.push('9-12');  // El Pilar 2026 (12 de Octubre)
+            festivos.push('10-2');  // Todos los Santos 2026 se traslada al lunes 2 de Noviembre
+        }
+        return festivos;
+    }
 
     window.onload = function() {
         calcularCalendario();
@@ -240,6 +260,7 @@
         let domingos = 0;
         let festivos = 0;
 
+        const festivosActuales = obtenerFestivos(anio);
         const diasEnMes = new Date(anio, mes + 1, 0).getDate();
 
         for (let dia = 1; dia <= diasEnMes; dia++) {
@@ -249,7 +270,7 @@
 
             if (diaSemana === 0) {
                 domingos++;
-            } else if (festivosZaragoza.includes(claveFecha)) {
+            } else if (festivosActuales.includes(claveFecha)) {
                 festivos++;
             }
         }
@@ -262,8 +283,8 @@
         const mesIndex = document.getElementById('mes').value;
         const mesTexto = nombresMeses[mesIndex];
         const anio = document.getElementById('anio').value;
-        const domingos = parseInt(document.getElementById('domingos').value);
-        const festivos = parseInt(document.getElementById('festivos').value);
+        const domingos = parseInt(document.getElementById('domingos').value) || 0;
+        const festivos = parseInt(document.getElementById('festivos').value) || 0;
         const porcentaje = parseFloat(document.getElementById('porcentaje').value) || 100;
 
         const factorJornada = porcentaje / 100;
@@ -290,6 +311,76 @@
     function eliminarFila(boton) {
         const fila = boton.parentNode.parentNode;
         fila.parentNode.removeChild(fila);
+    }
+
+    function generarPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor(30, 58, 138); 
+        doc.text("Resumen de Pluses - Hostelería Zaragoza", 14, 20);
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(100, 116, 139);
+        doc.text("Calculado según Convenio Colectivo (Domingo: 12.61€ | Festivo: 25.00€)", 14, 27);
+        
+        doc.setDrawColor(2, 132, 199);
+        doc.setLineWidth(1);
+        doc.line(14, 32, 196, 32);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.setFillColor(30, 58, 138); 
+        doc.rect(14, 40, 182, 8, "F");
+
+        doc.text("Mes", 16, 45);
+        doc.text("Año", 38, 45);
+        doc.text("Dom.", 55, 45);
+        doc.text("Fest.", 70, 45);
+        doc.text("% Jorn.", 85, 45);
+        doc.text("Total Dom", 110, 45);
+        doc.text("Total Fest", 145, 45);
+        doc.text("Total Plus", 175, 45);
+
+        const filasTabla = document.querySelectorAll("#tablaResultados tbody tr");
+        
+        if(filasTabla.length === 0) {
+            alert("La tabla está vacía. Añade al menos un mes para generar el PDF.");
+            return;
+        }
+
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(51, 65, 85);
+        
+        let y = 54; 
+        
+        filasTabla.forEach((fila) => {
+            const celdas = fila.getElementsByTagName("td");
+            
+            doc.setDrawColor(226, 232, 240);
+            doc.setLineWidth(0.2);
+            doc.line(14, y + 2, 196, y + 2);
+
+            doc.text(celdas[0].innerText, 16, y);
+            doc.text(celdas[1].innerText, 38, y);
+            doc.text(celdas[2].innerText, 57, y);
+            doc.text(celdas[3].innerText, 72, y);
+            doc.text(celdas[4].innerText, 88, y);
+            doc.text(celdas[5].innerText, 110, y);
+            doc.text(celdas[6].innerText, 145, y);
+            
+            doc.setFont("helvetica", "bold");
+            doc.text(celdas[7].innerText, 175, y);
+            doc.setFont("helvetica", "normal");
+
+            y += 10; 
+        });
+
+        doc.save("Plus_Hosteleria_Zaragoza.pdf");
     }
 </script>
 
