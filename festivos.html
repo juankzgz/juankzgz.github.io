@@ -348,8 +348,11 @@
         doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
         doc.setTextColor(30, 58, 138); 
-        doc.text("Resumen de Pluses - Hostelería Zaragoza", 14, 20);
-        
+        doc.text("Resumen de Pluses - Domingos y festivos", 14, 20);
+        doc.setFont("helvetica");
+        doc.setFontSize(16);
+        doc.setTextColor(30, 58, 138);
+        doc.text("Juan Carlos Cardona Lorente", 14, 20);
         doc.setFontSize(10);
         doc.setFont("helvetica", "italic");
         doc.setTextColor(100, 116, 139);
@@ -408,7 +411,7 @@
             y += 10; 
         });
 
-        doc.save("Plus_Hosteleria_Zaragoza.pdf");
+        doc.save("Plus_Dom_Fest_JC Cardona.pdf");
     }
 </script>
 
