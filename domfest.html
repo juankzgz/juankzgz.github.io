@@ -40,7 +40,7 @@
             max-width: 900px;
         }
 
-        h2, h3, h4 {
+        h2 {
             text-align: center;
             color: var(--primary-color);
             margin-bottom: 25px;
@@ -49,8 +49,23 @@
             padding-bottom: 15px;
         }
 
-        h3 { font-weight: 400; }
-        h4 { font-weight: 300; }
+        h3 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-weight: 400;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        h4 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-weight: 300;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
 
         .grid-inputs {
             display: grid;
@@ -136,7 +151,6 @@
 
         tr:nth-child(even) { background-color: #f9f9f9; }
 
-        /* Celdas editables en pantalla clara y accesibles */
         .input-celda {
             width: 100%;
             border: 1px solid #ddd;
@@ -153,7 +167,8 @@
         .input-celda:focus {
             border-color: var(--accent-color);
             outline: none;
-            box-shadow: inset 0 1px 1px rgba(0,0,0,0.075), 0 0 4px rgba(41, 128, 185, 0.4);
+            background-color: #fff;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
         }
 
         .col-total {
@@ -193,52 +208,19 @@
         .btn-clear { background-color: #95a5a6; color: white; }
         .btn-clear:hover { background-color: #7f8c8d; }
 
-        /* ESTILOS EXCLUSIVOS PARA EL CLON DEL PDF (No afectan a tu pantalla) */
-        body.modo-pdf-activo .clon-oculto-pdf {
-            display: block !important;
-            background: #fff !important;
-        }
-
-        .modo-pdf {
-            box-shadow: none !important;
-            padding: 10px !important;
-            margin: 0 !important;
-            background: #fff !important;
-            width: 100% !important;
-        }
-        
-        .modo-pdf .table-container {
-            overflow: visible !important;
-        }
-
-        .modo-pdf table {
-            width: 100% !important;
-            table-layout: fixed !important; /* Cuadra las columnas exactamente al A4 */
-            page-break-inside: avoid;
-        }
-
-        /* Reparto exacto de columnas en el PDF para que no se desplace */
-        .modo-pdf th:nth-child(1), .modo-pdf td:nth-child(1) { width: 15%; }
-        .modo-pdf th:nth-child(2), .modo-pdf td:nth-child(2) { width: 11%; }
-        .modo-pdf th:nth-child(3), .modo-pdf td:nth-child(3) { width: 36%; }
-        .modo-pdf th:nth-child(4), .modo-pdf td:nth-child(4) { width: 18%; }
-        .modo-pdf th:nth-child(5), .modo-pdf td:nth-child(5) { width: 10%; }
-        .modo-pdf th:nth-child(6), .modo-pdf td:nth-child(6) { width: 10%; }
-
-        .span-temporal-pdf {
-            display: block;
-            word-wrap: break-word;
-            white-space: normal;
-            font-size: 0.95rem;
-            text-align: center;
-            color: #2c3e50;
-            padding: 4px;
+        @media print {
+            body { background-color: #fff; color: #000; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .no-print { display: none !important; }
+            th { background-color: #34495e !important; color: #fff !important; }
+            .input-celda { border: none !important; background: transparent !important; padding: 0; }
+            table, th, td { border: 1px solid #666 !important; }
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="contenedor-registro">
+<div class="container">
     <h2>Registro de Domingos y Festivos</h2>
     <h3>Filcea Bogdana Anca - Porcentaje de jornada: 72%</h3>
     <h4>Según Convenio: En porcentaje de jornada 100%; Domingo: 12,61 € Festivo: 25 €</h4>
@@ -373,6 +355,7 @@ function actualizarTablaHTML() {
 
 function editarDiasDinamicos(index, tipo, nuevoValor) {
     tablaRegistros[index][tipo] = nuevoValor;
+
     const diasValidos = nuevoValor.trim().split(/\s+/).filter(dia => dia !== "");
     const nuevoTotal = nuevoValor.trim() === "" ? 0 : diasValidos.length;
 
@@ -387,61 +370,46 @@ function editarDiasDinamicos(index, tipo, nuevoValor) {
 
 function limpiarTabla() { tablaRegistros = []; actualizarTablaHTML(); }
 
-// NUEVO MÉTODO SEGURO: Genera el PDF usando un clon en memoria. Tu pantalla queda intacta.
+// FUNCIÓN ACTUALIZADA: Generación y descarga directa del PDF
 function descargarPDF() {
-    const elementoOriginal = document.getElementById('contenedor-registro');
-    
-    // 1. Creamos un clon exacto del contenedor para procesar el PDF sin tocar tu pantalla
-    const clon = elementoOriginal.cloneNode(true);
-    clon.classList.add('clon-oculto-pdf');
-    
-    // 2. Rescatamos los valores que hayas escrito a mano en los inputs originales y los pasamos al clon como texto plano
-    const inputsOriginales = elementoOriginal.querySelectorAll('.input-celda');
-    const inputsClon = clon.querySelectorAll('.input-celda');
-    
-    inputsOriginales.forEach((inputOriginal, index) => {
-        const inputDelClon = inputsClon[index];
-        const span = document.createElement('span');
-        span.className = 'span-temporal-pdf';
-        span.innerText = inputOriginal.value || ' ';
-        
-        // Reemplazamos el cuadro de entrada por texto en el clon
-        inputDelClon.parentNode.replaceChild(span, inputDelClon);
+    const elemento = document.querySelector('.container');
+    const noPrintElements = document.querySelectorAll('.no-print');
+    const inputs = document.querySelectorAll('.input-celda');
+
+    // 1. Forzar sincronización de los valores escritos por el usuario en el atributo 'value'
+    // e igualar el diseño visual limpio eliminando bordes de los inputs para el PDF
+    inputs.forEach(input => {
+        input.setAttribute('value', input.value);
+        input.style.border = 'none';
+        input.style.background = 'transparent';
+        input.style.padding = '0';
     });
 
-    // 3. Estilizamos el clon para el renderizado perfecto
-    clon.classList.add('modo-pdf');
-    clon.style.position = 'absolute';
-    clon.style.left = '-9999px'; // Lo mandamos fuera de la pantalla visible
-    clon.style.top = '0';
-    clon.style.width = '1024px'; // Simulamos ancho de PC de escritorio para que quepa todo perfecto
-    
-    document.body.appendChild(clon);
-    document.body.classList.add('modo-pdf-activo');
+    // 2. Ocultar los controles interactivos que no deben ir en el documento impreso
+    noPrintElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
 
+    // 3. Opciones de configuración del PDF
     const opciones = {
-        margin:       10,
+        margin:       15,
         filename:     'Registro_Domingos_Festivos_Filcea Bogdana Anca.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true,
-            scrollX: 0,
-            scrollY: 0
-        },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css'] }
+        html2canvas:  { scale: 3, logging: false, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // 4. Se genera el PDF basándonos ÚNICAMENTE en el clon oculto
-    html2pdf().set(opciones).from(clon).save().then(() => {
-        // Limpieza absoluta al terminar
-        document.body.classList.remove('modo-pdf-activo');
-        clon.remove();
-    }).catch((err) => {
-        document.body.classList.remove('modo-pdf-activo');
-        clon.remove();
-        console.error("Error al generar PDF:", err);
+    // 4. Procesar y guardar el archivo automáticamente
+    html2pdf().set(opciones).from(elemento).save().then(() => {
+        // 5. Revertir los cambios visuales en la interfaz tras generar el PDF
+        noPrintElements.forEach(el => el.style.display = '');
+        inputs.forEach(input => {
+            input.style.border = '';
+            input.style.background = '';
+            input.style.padding = '';
+        });
+    }).catch(err => {
+        console.error("Error generando el PDF:", err);
+        // Asegurar que se restaure la vista si ocurre un error inesperado
+        noPrintElements.forEach(el => el.style.display = '');
     });
 }
 </script>
