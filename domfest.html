@@ -385,11 +385,11 @@ function editarDiasDinamicos(index, tipo, nuevoValor) {
 
 function limpiarTabla() { tablaRegistros = []; actualizarTablaHTML(); }
 
-// FUNCIÓN CORREGIDA: Ajusta márgenes y saltos de página verticales de forma estricta
+// FUNCIÓN REAJUSTADA: Resetea el body de la app móvil para que el render empiece alineado a la izquierda (0,0)
 function descargarPDF() {
     const elemento = document.getElementById('contenedor-registro');
     
-    // 1. Convertir temporalmente inputs a texto para evitar problemas de visualización
+    // 1. Transformar inputs a texto limpio
     const inputs = elemento.querySelectorAll('.input-celda');
     inputs.forEach(input => {
         const span = document.createElement('span');
@@ -399,22 +399,22 @@ function descargarPDF() {
         input.parentElement.appendChild(span);
     });
 
-    // Añadir clase correctora de altura y márgenes
+    // 2. Bloquear alineación del cuerpo global y del contenedor
+    document.body.classList.add('modo-pdf-activo');
     elemento.classList.add('modo-pdf');
 
-    // Configuración milimétrica para evitar cortes inferiores
     const opciones = {
-        margin:       10, // Margen óptimo de 10mm
-        filename:     'Registro_Domingos_Festivos_Filcea Bogdana Anca.pdf',
+        margin:       10,
+        filename:     'Registro_Domingos_Festivos_Zaragoza.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { 
             scale: 2, 
             useCORS: true,
-            windowWidth: 1024,
-            scrollY: 0 // Garantiza que empiece la captura desde arriba sin importar el scroll actual
+            scrollX: 0,
+            scrollY: 0
         },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css'] } // Impide cortes intermedios bruscos
+        pagebreak:    { mode: ['avoid-all', 'css'] }
     };
 
     // Generar y descargar automáticamente el archivo
