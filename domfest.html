@@ -40,7 +40,7 @@
             max-width: 900px;
         }
 
-        h2 {
+        h2, h3, h4 {
             text-align: center;
             color: var(--primary-color);
             margin-bottom: 25px;
@@ -49,23 +49,8 @@
             padding-bottom: 15px;
         }
 
-        h3 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 25px;
-            font-weight: 400;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 15px;
-        }
-
-        h4 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 25px;
-            font-weight: 300;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 15px;
-        }
+        h3 { font-weight: 400; }
+        h4 { font-weight: 300; }
 
         .grid-inputs {
             display: grid;
@@ -151,6 +136,7 @@
 
         tr:nth-child(even) { background-color: #f9f9f9; }
 
+        /* Celdas editables en pantalla clara y accesibles */
         .input-celda {
             width: 100%;
             border: 1px solid #ddd;
@@ -167,8 +153,7 @@
         .input-celda:focus {
             border-color: var(--accent-color);
             outline: none;
-            background-color: #fff;
-            box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.075), 0 0 4px rgba(41, 128, 185, 0.4);
         }
 
         .col-total {
@@ -208,29 +193,46 @@
         .btn-clear { background-color: #95a5a6; color: white; }
         .btn-clear:hover { background-color: #7f8c8d; }
 
-        /* Optimización Impresión Física clásica */
-        @media print {
-            body { background-color: #fff; color: #000; padding: 0; }
-            .container { box-shadow: none; padding: 0; max-width: 100%; }
-            .no-print { display: none !important; }
-            th { background-color: #34495e !important; color: #fff !important; }
-            .input-celda { border: none !important; background: transparent !important; padding: 0; }
-            table, th, td { border: 1px solid #666 !important; }
+        /* ESTILOS EXCLUSIVOS PARA EL CLON DEL PDF (No afectan a tu pantalla) */
+        body.modo-pdf-activo .clon-oculto-pdf {
+            display: block !important;
+            background: #fff !important;
         }
 
-        /* NUEVO: Clase temporal para dar estilo al PDF autodescargado */
         .modo-pdf {
             box-shadow: none !important;
             padding: 10px !important;
-            max-width: 100% !important;
+            margin: 0 !important;
+            background: #fff !important;
+            width: 100% !important;
         }
-        .modo-pdf .no-print {
-            display: none !important;
+        
+        .modo-pdf .table-container {
+            overflow: visible !important;
         }
-        .modo-pdf .input-celda {
-            border: none !important;
-            background: transparent !important;
-            padding: 0 !important;
+
+        .modo-pdf table {
+            width: 100% !important;
+            table-layout: fixed !important; /* Cuadra las columnas exactamente al A4 */
+            page-break-inside: avoid;
+        }
+
+        /* Reparto exacto de columnas en el PDF para que no se desplace */
+        .modo-pdf th:nth-child(1), .modo-pdf td:nth-child(1) { width: 15%; }
+        .modo-pdf th:nth-child(2), .modo-pdf td:nth-child(2) { width: 11%; }
+        .modo-pdf th:nth-child(3), .modo-pdf td:nth-child(3) { width: 36%; }
+        .modo-pdf th:nth-child(4), .modo-pdf td:nth-child(4) { width: 18%; }
+        .modo-pdf th:nth-child(5), .modo-pdf td:nth-child(5) { width: 10%; }
+        .modo-pdf th:nth-child(6), .modo-pdf td:nth-child(6) { width: 10%; }
+
+        .span-temporal-pdf {
+            display: block;
+            word-wrap: break-word;
+            white-space: normal;
+            font-size: 0.95rem;
+            text-align: center;
+            color: #2c3e50;
+            padding: 4px;
         }
     </style>
 </head>
@@ -385,23 +387,37 @@ function editarDiasDinamicos(index, tipo, nuevoValor) {
 
 function limpiarTabla() { tablaRegistros = []; actualizarTablaHTML(); }
 
-// FUNCIÓN REAJUSTADA: Resetea el body de la app móvil para que el render empiece alineado a la izquierda (0,0)
+// NUEVO MÉTODO SEGURO: Genera el PDF usando un clon en memoria. Tu pantalla queda intacta.
 function descargarPDF() {
-    const elemento = document.getElementById('contenedor-registro');
+    const elementoOriginal = document.getElementById('contenedor-registro');
     
-    // 1. Transformar inputs a texto limpio
-    const inputs = elemento.querySelectorAll('.input-celda');
-    inputs.forEach(input => {
+    // 1. Creamos un clon exacto del contenedor para procesar el PDF sin tocar tu pantalla
+    const clon = elementoOriginal.cloneNode(true);
+    clon.classList.add('clon-oculto-pdf');
+    
+    // 2. Rescatamos los valores que hayas escrito a mano en los inputs originales y los pasamos al clon como texto plano
+    const inputsOriginales = elementoOriginal.querySelectorAll('.input-celda');
+    const inputsClon = clon.querySelectorAll('.input-celda');
+    
+    inputsOriginales.forEach((inputOriginal, index) => {
+        const inputDelClon = inputsClon[index];
         const span = document.createElement('span');
         span.className = 'span-temporal-pdf';
-        span.innerText = input.value || ' ';
-        input.style.display = 'none';
-        input.parentElement.appendChild(span);
+        span.innerText = inputOriginal.value || ' ';
+        
+        // Reemplazamos el cuadro de entrada por texto en el clon
+        inputDelClon.parentNode.replaceChild(span, inputDelClon);
     });
 
-    // 2. Bloquear alineación del cuerpo global y del contenedor
+    // 3. Estilizamos el clon para el renderizado perfecto
+    clon.classList.add('modo-pdf');
+    clon.style.position = 'absolute';
+    clon.style.left = '-9999px'; // Lo mandamos fuera de la pantalla visible
+    clon.style.top = '0';
+    clon.style.width = '1024px'; // Simulamos ancho de PC de escritorio para que quepa todo perfecto
+    
+    document.body.appendChild(clon);
     document.body.classList.add('modo-pdf-activo');
-    elemento.classList.add('modo-pdf');
 
     const opciones = {
         margin:       10,
@@ -417,10 +433,15 @@ function descargarPDF() {
         pagebreak:    { mode: ['avoid-all', 'css'] }
     };
 
-    // Generar y descargar automáticamente el archivo
-    html2pdf().set(opciones).from(elemento).save().then(() => {
-        // Al finalizar la descarga, removemos la clase para que todo vuelva a verse normal en la pantalla
-        elemento.classList.remove('modo-pdf');
+    // 4. Se genera el PDF basándonos ÚNICAMENTE en el clon oculto
+    html2pdf().set(opciones).from(clon).save().then(() => {
+        // Limpieza absoluta al terminar
+        document.body.classList.remove('modo-pdf-activo');
+        clon.remove();
+    }).catch((err) => {
+        document.body.classList.remove('modo-pdf-activo');
+        clon.remove();
+        console.error("Error al generar PDF:", err);
     });
 }
 </script>
