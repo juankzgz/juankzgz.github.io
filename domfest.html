@@ -385,20 +385,36 @@ function editarDiasDinamicos(index, tipo, nuevoValor) {
 
 function limpiarTabla() { tablaRegistros = []; actualizarTablaHTML(); }
 
-// MODIFICACIÓN: Función optimizada para generar y descargar el PDF automáticamente
+// FUNCIÓN CORREGIDA: Ajusta márgenes y saltos de página verticales de forma estricta
 function descargarPDF() {
     const elemento = document.getElementById('contenedor-registro');
     
-    // Añadimos una clase temporal para ocultar los selectores y botones, y limpiar los bordes de los inputs
+    // 1. Convertir temporalmente inputs a texto para evitar problemas de visualización
+    const inputs = elemento.querySelectorAll('.input-celda');
+    inputs.forEach(input => {
+        const span = document.createElement('span');
+        span.className = 'span-temporal-pdf';
+        span.innerText = input.value || ' ';
+        input.style.display = 'none';
+        input.parentElement.appendChild(span);
+    });
+
+    // Añadir clase correctora de altura y márgenes
     elemento.classList.add('modo-pdf');
 
-    // Configuración del archivo PDF resultante
+    // Configuración milimétrica para evitar cortes inferiores
     const opciones = {
-        margin:       15,
-        filename:     'Registro_Domingos_Festivos_Zaragoza.pdf',
+        margin:       10, // Margen óptimo de 10mm
+        filename:     'Registro_Domingos_Festivos_Filcea Bogdana Anca.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true,
+            windowWidth: 1024,
+            scrollY: 0 // Garantiza que empiece la captura desde arriba sin importar el scroll actual
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css'] } // Impide cortes intermedios bruscos
     };
 
     // Generar y descargar automáticamente el archivo
